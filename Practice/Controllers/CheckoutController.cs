@@ -6,6 +6,7 @@ using Microsoft.Extensions.Primitives;
 using Practice.Filters;
 using Services.Contracts;
 using Services.Implementations;
+using Services.Implementations.Cars;
 
 namespace Practice.Controllers;
 
@@ -52,6 +53,47 @@ public class CheckoutController : ControllerBase
         {
             Message = "Checkout successful"
         });
+    }
+
+    [HttpGet(Name = "Checkout")]
+    public async Task<IActionResult> Checkout(string factoryType = "eco", string carType = "eco-sedan")
+    {
+        ICarFactory carFactory = factoryType.ToLower() switch
+        {
+            "lux" => new LuxuryCarFactory(),
+            "eco" => new EconomyCarFactory(),
+            _ => throw new ArgumentException("Invalid factory type")
+        };
+
+        ICar car = await carFactory.CreateCar(carType);
+        await car.Drive();
+
+        ICar nextCarType = await carFactory.CreateCar("eco-hatchback");
+        await nextCarType.Drive();
+
+        if (carFactory is IEconomyCarFactory economyFactory)
+        {
+            Console.WriteLine($"Is fuel-efficient? {await economyFactory.IsFuelEfficient()}");
+        }
+
+        //Continue creating luxury car
+        factoryType = "lux";
+        carType = "lux-suv";
+        ICarFactory nextCarFactory = factoryType.ToLower() switch
+        {
+            "lux" => new LuxuryCarFactory(),
+            "eco" => new EconomyCarFactory(),
+            _ => throw new ArgumentException("Invalid factory type")
+        };
+
+        ICar nextCar = await nextCarFactory.CreateCar(carType);
+     
+        if (nextCarFactory is ILuxuryCarFactory luxuryCarFactory)
+        {
+            Console.WriteLine($"Has premium features? {await luxuryCarFactory.HasPremiumFeatures()}");
+        }
+
+        return Ok("Produced necessary cars!");
     }
 
     private string GetParticularDataExample()

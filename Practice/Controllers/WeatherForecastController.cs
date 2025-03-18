@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Services.CarFactory;
+using Services.Contracts;
 
 namespace Practice.Controllers
 {
@@ -20,14 +22,15 @@ namespace Practice.Controllers
 
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        public async Task<IEnumerable<WeatherForecast>> Get()
         {
-            string example = "Hello N/A world - this is a test - - N/A";
-            string cleaned = CleanInput(example);
+            var carFact = new CarFactory();
+            ICar car = await carFact.CreateCar("suv");
+            await car.Drive();
             //Console.WriteLine(cleaned);
             BogusProcessor bogus = new();
             bogus.TestBogus();
-
+                
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
