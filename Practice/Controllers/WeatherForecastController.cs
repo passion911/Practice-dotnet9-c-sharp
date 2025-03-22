@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Services.CarFactory;
 using Services.Contracts;
+using Services.MessagePublisher;
 
 namespace Practice.Controllers
 {
@@ -8,6 +9,7 @@ namespace Practice.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
+        private readonly EventHubPublisher _eventHubPublisher;
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -15,22 +17,33 @@ namespace Practice.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(
+            EventHubPublisher eventHubPublisher,
+            ILogger<WeatherForecastController> logger)
         {
+            _eventHubPublisher = eventHubPublisher;
             _logger = logger;
         }
 
+        //[HttpGet(Name = "NoName")]
+        //public async Task<string> TestRabbitMq()
+        //{
+        //    await _eventHubPublisher.SendMessage("this is message from client side------");
+
+        //    return "Hello goldfish";
+        //}
 
         [HttpGet(Name = "GetWeatherForecast")]
         public async Task<IEnumerable<WeatherForecast>> Get()
         {
+            await _eventHubPublisher.SendMessage("this is message from client side------");
             var carFact = new CarFactory();
             ICar car = await carFact.CreateCar("suv");
-            await car.Drive();
+            //await car.Drive();
             //Console.WriteLine(cleaned);
             BogusProcessor bogus = new();
-            bogus.TestBogus();
-                
+            //bogus.TestBogus();
+
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -40,53 +53,20 @@ namespace Practice.Controllers
             .ToArray();
         }
 
-        private static void Sum(List<BasketballEvent> events)
-        {
-            foreach ( var evet in events )
-            {
-                evet.Tracker.AddToHomeScore(evet.HomePoints);
-                evet.Tracker.AddToAwayScore(evet.AwayPoints);
-                evet.PrintScore();
-            }
-        }
-
-        public static string CleanInput(string input)
-        {
-            if ( string.IsNullOrWhiteSpace(input) )
-                return string.Empty;
-
-            var unwantedValues = new[] { "N/A", "-", "" };
-
-
-            var result = string.Join(" ", input
-                .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                .Where(word => !unwantedValues.Contains(word)));
-
-            return result;
-        }
-
-        private static void PrintEventsScores(List<BasketballEvent> events)
-        {
-            foreach ( var evt in events )
-            {
-                evt.PrintScore();
-            }
-        }
-
         //TODO: design the ouput to deal with invalid input.
 
         //Brute force O(n^2): Time complexity. Space complexity O(1)
         static int[] TwoSomeBruteForce(int[] nums, int target)
         {
-            if ( !IsInputValid(nums) ) return [];
+            if (!IsInputValid(nums)) return [];
 
             int inputLength = nums.Length;
 
-            for ( int i = 0; i < inputLength; i++ )
+            for (int i = 0; i < inputLength; i++)
             {
-                for ( int j = i + 1; j < inputLength; j++ )
+                for (int j = i + 1; j < inputLength; j++)
                 {
-                    if ( nums[i] + nums[j] == target )
+                    if (nums[i] + nums[j] == target)
                     {
                         return [i, j];
                     }
@@ -99,20 +79,20 @@ namespace Practice.Controllers
         //Time complexity: O(n), Space complexity: O(n)
         static int[] TwoSumHashMap(int[] nums, int target)
         {
-            if ( !IsInputValid(nums) ) return [];
+            if (!IsInputValid(nums)) return [];
 
             Dictionary<int, int> hashSet = new();
 
-            for ( int i = 0; i < nums.Length; i++ )
+            for (int i = 0; i < nums.Length; i++)
             {
                 int diff = target - nums[i];
 
-                if ( hashSet.ContainsKey(diff) )
+                if (hashSet.ContainsKey(diff))
                 {
                     return [hashSet[diff], i];
                 }
 
-                if ( !hashSet.ContainsKey(nums[i]) ) //avoid overwrite index of duplicates.
+                if (!hashSet.ContainsKey(nums[i])) //avoid overwrite index of duplicates.
                     hashSet[nums[i]] = i;
             }
 
@@ -122,7 +102,7 @@ namespace Practice.Controllers
         //Time complexity: O(n log n), Space complexity: O(n)
         static int[]? TwoSumTwoPointers(int[] nums, int target)
         {
-            if ( !IsInputValid(nums) ) return null;
+            if (!IsInputValid(nums)) return null;
 
             var sortedNums = nums
                 .Select((num, index) => new { num, index })
@@ -132,15 +112,15 @@ namespace Practice.Controllers
             var left = 0;
             var right = sortedNums.Length - 1;
 
-            while ( left < right )
+            while (left < right)
             {
                 var total = sortedNums[left].num + sortedNums[right].num;
 
-                if ( total == target )
+                if (total == target)
                 {
                     return [sortedNums[left].index, sortedNums[right].index];
                 }
-                else if ( total > target )
+                else if (total > target)
                 {
                     right--;
                 }
@@ -156,3 +136,4 @@ namespace Practice.Controllers
         static bool IsInputValid(int[]? input) => input is not null && input.Length >= 2;
     }
 }
+

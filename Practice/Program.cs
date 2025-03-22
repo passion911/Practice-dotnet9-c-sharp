@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi.Models;
 using Practice.Filters;
 using Practice.Middleware;
+using Services.RabbitMQHub;
 using Services.ServiceRegistration;
 
 namespace Practice;
@@ -26,10 +27,13 @@ public class Program
 
         builder.Services.AddApplicationServices();
         builder.Services.TryAddScoped<ApiCustomFilter>();
+        builder.Services.Configure<RabbitMQOptions>(builder.Configuration.GetSection("RabbitMQ"));
+        builder.Services.AddRabbitMQService();
+        builder.Services.AddPublisherService();
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-        if ( app.Environment.IsDevelopment() )
+        if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
         }

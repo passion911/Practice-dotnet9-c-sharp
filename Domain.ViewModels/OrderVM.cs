@@ -1,6 +1,6 @@
 ﻿namespace Domain.ViewModels;
 
-public class OrderViewModel
+public class OrderVM
 {
     public Guid OrderId { get; set; }
     public string OrderDetail { get; set; }
