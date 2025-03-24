@@ -1,3 +1,5 @@
+using Application.Services;
+using Application.Services.MappingProfiles;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi.Models;
 using Practice.Filters;
@@ -30,6 +32,10 @@ public class Program
         builder.Services.Configure<RabbitMQOptions>(builder.Configuration.GetSection("RabbitMQ"));
         builder.Services.AddRabbitMQService();
         builder.Services.AddPublisherService();
+        builder.Services.AddAutoMapper(
+            typeof(MappingProfile)
+        );
+        builder.Services.RegisterInfrastructureServices(builder.Configuration);
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
